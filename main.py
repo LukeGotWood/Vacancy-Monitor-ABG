@@ -1,8 +1,8 @@
 # main.py
 
 # Import all used modules
-import http.client, urllib, urllib.request
-import os, sys
+import http.client, urllib, urllib.request, socket
+import os, sys, time
 from dotenv import load_dotenv
 from selenium import webdriver
 
@@ -15,6 +15,7 @@ if not os.path.isfile(os.path.join(os.path.dirname(os.path.realpath(__file__)), 
 load_dotenv()
 TOKENKEY = os.getenv('TOKENKEY')
 USERKEY = os.getenv('USERKEY')
+NETWORKWAIT = os.getenv('NETWORKWAIT')
 
 # Declare functions
 def pushNotification(msg):
@@ -31,7 +32,27 @@ def pushNotification(msg):
     )
     conn.getresponse()
 
+def is_network():
+    hostname = "one.one.one.one"
+    try:
+        # see if we can resolve the host name -- tells us if there is
+        # a DNS listening
+        host = socket.gethostbyname(hostname)
+        # connect to the host -- tells us if the host is actually
+        # reachable
+        s = socket.create_connection((host, 80), 2)
+        s.close()
+        return True
+    except:
+        pass
+        return False
+
 # -------- Main Body --------
+
+# Wait until network connection is established before continuing
+while not is_network():
+    print(f'No network detected, waiting for { NETWORKWAIT } seconds...')
+    time.sleep(NETWORKWAIT)
 
 # Set chrome to be headless to not launch window
 options = webdriver.ChromeOptions()
@@ -55,14 +76,20 @@ elems = driver.find_elements_by_xpath('/html/body/form/div[4]/div/div[2]/section
 if len(elems) == 1:
     elem = elems[0]
 
+    print(f'Element text: { repr(elem.text) }')
+
     # if the text is anything other than expected or <p> tag doesnt exist, send notification
     if str(elem.text) != 'There are none currently avalalble.\n ':
-        pushNotification(elem.text)
+        print('Text has changed, send notification')
+        pushNotification(repr(elem.text))
 else:
+    print('Element not found, possible vacancy')
     pushNotification('Possible vacancy')
 
 # Close the driver
 driver.close()
+
+print('DONE')
 
 # End the Program
 sys.exit(0)
