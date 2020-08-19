@@ -15,7 +15,7 @@ if not os.path.isfile(os.path.join(os.path.dirname(os.path.realpath(__file__)), 
 load_dotenv()
 TOKENKEY = os.getenv('TOKENKEY')
 USERKEY = os.getenv('USERKEY')
-NETWORKWAIT = os.getenv('NETWORKWAIT')
+NETWORKWAIT = int(os.getenv('NETWORKWAIT'))
 
 # Declare functions
 def pushNotification(msg):
